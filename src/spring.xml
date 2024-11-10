@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:context="http://www.springframework.org/schema/context"
+     xmlns:tx="http://www.springframework.org/schema/tx"
+     xmlns:aop="http://www.springframework.org/schema/aop"
+     xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+       	http://www.springframework.org/schema/tx/spring-tx.xsd
+       	http://www.springframework.org/schema/aop 
+       	http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+	<!-- spring注解搜寻范围 -->
+	<context:component-scan base-package="com"/>
+
+
+	<!-- 引用数据库配置文件 -->
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+
+	<!-- 配置数据源 -使用c3p0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driver}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		
+		<!-- c3p0连接池参数配置 -->
+        <property name="initialPoolSize" value="${c3p0.initialPoolSize}" /><!-- 初始化连接数 -->
+        <property name="minPoolSize" value="${c3p0.minPoolSize}" /><!-- 最小连接数 -->
+        <property name="maxPoolSize" value="${c3p0.maxPoolSize}" /><!-- 连接池中保留的最大连接数 -->
+		<property name="maxIdleTime" value="${c3p0.maxIdleTime}" /><!-- 连接的过期时间(秒) -->
+        <property name="idleConnectionTestPeriod" value="${c3p0.idleConnectionTestPeriod}" /><!-- 检查连接池中的空闲连接间隔时间(秒) -->
+	</bean>
+
+
+	<!-- 配置hibernate - sessionFactory -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- 实体类所在的包 对包中每个类进行注解扫描 省去逐一配置-->
+		<property name="packagesToScan">
+			<list><value>com.itbaizhan.entity</value></list>
+		</property>
+		<!-- 配置Hibernate属性-->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop><!-- 数据库方言 -->
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop><!-- 是否打印sql语句 -->
+				<prop key="hibernate.connection.useUnicode">${hibernate.connection.useUnicode}</prop><!-- 连接数据库时是否使用Unicode编码 -->
+				<prop key="hibernate.connection.characterEncoding">${hibernate.connection.characterEncoding}</prop><!-- 连接数据库时数据的传输字符集编码方式 -->
+			</props>
+		</property>
+	</bean>
+
+
+	<!-- 配置hibernate事务管理器 -->
+  	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+    	<property name="sessionFactory" ref="sessionFactory"/>
+  	</bean>
+
+	<!-- 使用注解-注册事务管理类或方法 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+
+</beans> 
